@@ -1,0 +1,107 @@
+/* 1. What is the average age of passengers in each gender and class of travel? */
+
+SELECT gender,
+       class,
+       ROUND(AVG(age), 1) AS average_age
+FROM airline_customers
+GROUP BY gender, class
+ORDER BY class;
+
+
+/* 2. What percentage of customers are loyal and what percentage are disloyal? */
+
+SELECT customer_type,
+COUNT(*) * 100 / (SELECT COUNT(*) FROM airline_customer) AS percentage_customers
+FROM airline_customer
+GROUP BY customer_type;
+
+
+
+/* 3. What is the average flight distance for each type of travel (personal vs business)? */
+
+SELECT type_travel, ROUND(AVG(flight_distance), 0)
+FROM airline_customers
+LEFT JOIN airline_scores
+USING (customer_id)
+GROUP BY type_travel;
+
+4. What is the average inflight wifi service satisfaction level for each class of travel?
+
+SELECT class, ROUND(AVG(wifi_inflight), 2) AS avg_wifi_inflight
+FROM airline_customers AS customers
+LEFT JOIN airline_scores AS scores
+ON customers.customer_id = scores.customer_id
+GROUP BY class
+ORDER BY avg_wifi_inflight DESC;
+
+5. What is the average flight distance for each travel class, travel type and customer type?
+
+SELECT 
+   a.class,
+   a.type_travel,
+   a.customer_type,
+   ROUND(AVG(s.flight_distance), 2) AS avg_flight_distance
+FROM airline_customers a
+LEFT JOIN airline_scores s ON a.customer_id = s.customer_id
+GROUP BY a.class, a.type_travel, a.customer_type
+ORDER BY avg_flgiht_distance DESC;
+
+
+/* 6. What is the average satisfaction level of passengers across all aspects listed for traveling different classes? */
+
+SELECT 
+    class,
+    AVG(CASE
+      WHEN inflight_service = 0 THEN NULL
+      ELSE inflight_service
+    END) AS avg_inflight_service,
+    AVG(CASE
+      WHEN seat_comfort = 0 THEN NULL
+      ELSE seat_comfort
+    END) AS avg_seat_comfort,
+    AVG(CASE
+      WHEN baggage_handling = 0 THEN NULL
+      ELSE baggage_handling
+    END) AS avg_baggage_handling,
+    AVG(CASE
+      WHEN online_boarding = 0 THEN NULL
+      ELSE online_boarding
+    END) AS avg_online_boarding,
+    AVG(CASE
+      WHEN wifi_inflight = 0 THEN NULL
+      ELSE wifi_inflight
+    END) AS avg_wifi_inflight
+FROM airline_customers
+LEFT JOIN airline_scores
+USING (customer_id)
+GROUP BY class;
+    
+
+/* 7. What is the total number of passengers in each age group (1-20, 21-40, 41-60, 61-80) and total number of satisfied passengers? */
+
+WITH customers_cte AS (
+SELECT
+customer_id,
+age,
+CASE
+WHEN age BETWEEN 1 AND 20 THEN '1-20
+WHEN age BETWEEN 21 AND 40 THEN '21-40'
+WHEN age BETWEEN 41 AND 60 THEN '41-60'
+ELSE '61-80'
+END AS age_group
+FROM airline_customers
+),
+scores_cte AS (
+SELECT
+customer_id,
+satisfaction
+FROM airline_scores
+)
+SELECT
+age_group,
+COUNT(customers_cte.customer_id) AS total_passengers,
+SUM(CASE WHEN scores_cte.satisfaction = 'satisfied' THEN 1 ELSE O END) AS total_satisfied_passengers
+FROM customers_cte
+LEFT JOIN scores_cte
+USING (customer_id)
+GROUP BY age_group;
