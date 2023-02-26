@@ -1,0 +1,132 @@
+CREATE TABLE listings (
+     id INTEGER NOT NULL,
+     listing_url TEXT,
+     name TEXT,
+     host_id INTEGER,
+     host_url TEXT,
+     host_name TEXT,
+     host_response_time TEXT,
+     host_response_rate TEXT,
+     host_acceptance_rate TEXT,
+     host_is_superhost TEXT,
+     host_neighbourhood TEXT,
+     host_listings_count INTEGER,
+     host_identity_verified TEXT,
+     neighbourhood_cleansed TEXT,
+     latitude NUMERIC,
+     longitude NUMERIC,
+     property_type TEXT,
+     room_type TEXT,
+     accommodates INTEGER,
+     bathrooms_text INTEGER,
+     bedrooms INTEGER,
+     beds INTEGER,
+     amenities TEXT,
+     price NUMERIC,
+     minimum_nights INTEGER,
+     maximum_nights INTEGER,
+     has_availability TEXT,
+     availability_30 INTEGER,
+     availability_60 INTEGER,
+     availability_90 INTEGER,
+     availability_365 INTEGER,
+     number_of_reviews INTEGER,
+     first_review TEXT,
+     last_review TEXT,
+     review_scores_rating NUMERIC,
+     review_scores_accuracy NUMERIC,
+     review_scores_cleanliness NUMERIC,
+     review_scores_checkin NUMERIC,
+     review_scores_communication NUMERIC,
+     review_scores_location NUMERIC,
+     review_scores_value NUMERIC,
+     reviews_per_month NUMERIC);
+
+CREATE TABLE reviews (
+     listing_id INTEGER,
+     id INTEGER,
+     date TEXT,
+     reviewer_id INTEGER,
+     reviewer_name TEXT,
+     comments TEXT);              
+     
+ CREATE TABLE calendar (
+     listing_id INTEGER,
+     date TEXT,
+     available TEXT,
+     price NUMERIC,
+     adjusted_price NUMERIC,
+     minimum_nights INTEGER,
+     maximum_nights INTEGER);
+     
+/* 1. What are the top five most expensive neighborhoods in Toronto?    */
+
+SELECT neighbourhood_cleansed, ROUND(AVG(price), 2) AS price_avg
+FROM listings
+GROUP BY neighbourhood_cleansed
+ORDER BY price_avg DESC
+LIMIT 5;
+
+/* 2. What are the most popular property types? */
+
+SELECT property_type, COUNT(property_type) AS num_of_props
+FROM listings
+GROUP BY property_type
+ORDER BY num_of_props DESC;
+ 
+ /* 3. What are some popular rental places in the city? */
+ 
+SELECT id, name, availability_90, review_scores_rating, neighbourhood_cleansed
+FROM listings
+WHERE price < 1000 AND last_review LIKE '%2021%' OR last_review LIKE '%2022%'
+AND availability_90 < 5 AND availability_365 != 0
+ORDER by neighbourhood_cleansed, review_scores_rating DESC;
+
+
+/* 4. What are top ten 10 neighborhoods that have the most superhosts? */
+
+SELECT neighbourhood_cleansed, COUNT(host_is_superhost) AS superhost
+FROM listings
+WHERE host_is_superhost = 't'
+GROUP BY neighbourhood_cleansed
+ORDER BY superhost DESC
+LIMIT 10;
+ 
+ 
+ 
+/* 5. Which hosts have the highest number of listings? */
+
+SELECT host_id, host_url, host_name, COUNT(*) AS num_listings
+FROM listings
+GROUP BY host_id
+ORDER BY num_listings DESC
+
+/* 6. How much revenue top airbnb hosts making in a month? */
+
+SELECT id,
+listing_url,
+name,
+30-availability_30 AS booked_out_30,
+price,
+price * (30-availability_30) AS pot_rev_30
+FROM listings 
+WHERE availability_365 =! 0
+ORDER BY pot_rev_30 DESC
+LIMIT 20;
+
+/* 7. Which hosts could be potential customers in Toronto for the cleaning services business? */
+
+SELECT host_id, host_url, host_name, COUNT(*) AS num_dirty_reviews
+FROM reviews
+INNER JOIN listings
+ON reviews.listing_id = listings.id
+WHERE comments LIKE '%dirty%'
+GROUP BY host_id, host_url, host_name
+ORDER BY num_dirty_reviews DESC;
+
+
+
+ 
+ 
+ 
+     
