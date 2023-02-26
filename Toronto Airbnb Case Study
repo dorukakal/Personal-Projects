@@ -50,14 +50,7 @@ CREATE TABLE reviews (
      reviewer_name TEXT,
      comments TEXT);              
      
- CREATE TABLE calendar (
-     listing_id INTEGER,
-     date TEXT,
-     available TEXT,
-     price NUMERIC,
-     adjusted_price NUMERIC,
-     minimum_nights INTEGER,
-     maximum_nights INTEGER);
+
      
 /* 1. What are the top five most expensive neighborhoods in Toronto?    */
 
